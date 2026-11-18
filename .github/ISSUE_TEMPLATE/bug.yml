@@ -1,0 +1,37 @@
+name: Bug
+description: Algo no se comporta como dice la teoría, los tests o la documentación.
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Qué pasa
+      description: Comportamiento observado.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Qué se esperaba
+      description: Comportamiento esperado y, si aplica, la fórmula o el capítulo que lo respalda.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Cómo reproducirlo
+      description: Comando exacto, semilla y generador.
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Salida
+      description: Traceback o salida de `python tools/check.py` (sin secretos ni datos personales).
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Versión o commit
+      placeholder: v0.1.0 / abc1234
