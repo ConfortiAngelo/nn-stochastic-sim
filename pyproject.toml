@@ -1,0 +1,119 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nnsim"
+version = "0.0.1"
+description = "Training a neural network is a stochastic experiment: a from-scratch MLP studied with simulation tools."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Angelo Conforti" }]
+dependencies = ["numpy", "matplotlib", "scipy"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "NPY", "RUF"]
+# Notación matemática: X, W1, θ, η... son nombres legítimos en fórmulas.
+ignore = ["N803", "N806"]
+
+[tool.ruff.lint.per-file-ignores]
+# Letras griegas y símbolos matemáticos en código, docstrings y comentarios.
+"src/**" = ["RUF001", "RUF002", "RUF003"]
+"tests/**" = ["RUF001", "RUF002", "RUF003"]
+"experiments/**" = ["RUF001", "RUF002", "RUF003"]
+"docs/**" = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["nnsim"]
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+strict = true
+mypy_path = "src"
+files = ["src"]
+explicit_package_bases = true
+warn_unreachable = true
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = ["slow: tests que tardan más de 5 s; corren en el review del sprint"]
+
+# ---------------------------------------------------------------- coverage
+[tool.coverage.run]
+source = ["nnsim"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+exclude_also = [
+    "^\\s*\\.\\.\\.$",
+    "if TYPE_CHECKING:",
+    "@overload",
+]
+
+# ---------------------------------------------------------------- import-linter
+[tool.importlinter]
+root_package = "nnsim"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "nn es independiente"
+type = "forbidden"
+source_modules = ["nnsim.nn"]
+forbidden_modules = [
+    "nnsim.generators",
+    "nnsim.distributions",
+    "nnsim.datasets",
+    "nnsim.sampling",
+    "nnsim.trainers",
+    "nnsim.runner",
+    "nnsim.metrics",
+    "nnsim.stats",
+    "nnsim.config",
+]
+
+[[tool.importlinter.contracts]]
+name = "generators no depende del resto"
+type = "forbidden"
+source_modules = ["nnsim.generators"]
+forbidden_modules = [
+    "nnsim.distributions",
+    "nnsim.datasets",
+    "nnsim.sampling",
+    "nnsim.nn",
+    "nnsim.trainers",
+    "nnsim.metrics",
+    "nnsim.stats",
+    "nnsim.config",
+    "nnsim.runner",
+    "nnsim.dynamics",
+    "nnsim.fitting",
+    "nnsim.poisoning",
+]
+
+[[tool.importlinter.contracts]]
+name = "el núcleo no hace I/O gráfico"
+type = "forbidden"
+source_modules = ["nnsim"]
+forbidden_modules = ["matplotlib"]
+
+[[tool.importlinter.contracts]]
+name = "runner no depende de experimentos"
+type = "forbidden"
+source_modules = ["nnsim.runner"]
+forbidden_modules = ["experiments"]

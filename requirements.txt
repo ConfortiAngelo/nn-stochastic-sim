@@ -1,0 +1,4 @@
+# Dependencias de runtime (versiones fijas; ver CLAUDE.md §6).
+numpy==2.5.5
+matplotlib==3.11.2
+scipy==1.18.1
