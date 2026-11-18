@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "attribution": { "commit": "", "pr": "" },
+  "permissions": {
+    "allow": [
+      "Bash(python tools/check.py)", "Bash(python tools/check.py *)",
+      "Bash(python -m pytest *)", "Bash(python experiments/*)",
+      "Bash(ruff *)", "Bash(mypy *)", "Bash(lint-imports)",
+      "Bash(git status)", "Bash(git diff *)", "Bash(git log *)", "Bash(git show *)",
+      "Bash(git add *)", "Bash(git commit *)", "Bash(git switch *)", "Bash(git checkout -b *)",
+      "Bash(git merge *)", "Bash(git branch *)", "Bash(git worktree *)", "Bash(git fetch *)",
+      "Bash(gh issue *)", "Bash(gh pr view *)", "Bash(gh pr checks *)", "Bash(gh pr diff *)",
+      "Bash(gh run *)"
+    ],
+    "ask": [
+      "Bash(git push *)", "Bash(git tag *)", "Bash(git reset *)", "Bash(git rebase *)",
+      "Bash(gh pr create *)", "Bash(gh pr edit *)", "Bash(gh release *)",
+      "Bash(gh repo *)", "Bash(gh api *)", "Bash(gh project *)",
+      "Bash(pip *)", "Bash(python -m pip *)", "Bash(rm *)", "WebFetch"
+    ],
+    "deny": [
+      "Bash(git push --force*)", "Bash(git push -f*)", "Bash(git push * --force*)", "Bash(git push * -f*)",
+      "Bash(git push origin main*)", "Bash(git push * main)", "Bash(git push * HEAD:main*)",
+      "Bash(git commit --no-verify*)", "Bash(git commit * --no-verify*)", "Bash(git commit -n *)",
+      "Bash(gh pr merge *)", "Bash(gh repo delete *)",
+      "Read(./.env)", "Read(./.env.*)", "Read(**/*.pem)", "Read(**/*.key)"
+    ]
+  }
+}

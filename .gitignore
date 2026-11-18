@@ -1,0 +1,40 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+pip-wheel-metadata/
+
+# --- Entornos y secretos ---
+.venv/
+venv/
+.env
+.env*
+
+# --- Herramientas ---
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.import_linter_cache/
+
+# --- Resultados pesados (no se versionan; los CSV y PNG sí) ---
+results/trajectories/
+*.npz
+
+# --- Claude Code: configuración local de cada usuario ---
+.claude/settings.local.json
+
+# --- Editores y SO ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
