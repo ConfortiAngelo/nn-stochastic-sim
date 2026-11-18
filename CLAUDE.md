@@ -213,4 +213,6 @@ Con el usuario: español rioplatense, directo y sin relleno. Código e identific
 
 Se completa en la retro de cada sprint. Una línea por lección, con fecha.
 
-- (vacío)
+- 2026-11-18: `lint-imports` suelto no encuentra `nnsim` (no hay editable install). Correrlo vía `python tools/check.py` o `PYTHONPATH=src lint-imports`.
+- 2026-11-18: las reglas `allow` de `.claude/settings.json` se ignoran hasta aceptar el diálogo de confianza del workspace.
+- 2026-11-18: `gh auth refresh` (device flow): apretar Enter en la terminal antes de autorizar en el navegador, o el token no se guarda.
