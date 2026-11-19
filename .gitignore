@@ -38,3 +38,7 @@ results/trajectories/
 *.swp
 .DS_Store
 Thumbs.db
+
+# Worktrees de agentes y skills
+.worktrees/
+.claude/worktrees/
