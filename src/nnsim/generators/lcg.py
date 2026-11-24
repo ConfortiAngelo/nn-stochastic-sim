@@ -57,10 +57,10 @@ def satisfies_hull_dobell(m: int, a: int, c: int) -> tuple[bool, str]:
 
 
 def _require_int(value: object, name: str) -> int:
-    """Exige un ``int`` genuino (``bool`` no vale); lanza TypeError si no."""
-    if isinstance(value, bool) or not isinstance(value, int):
+    """Exige ``int`` o ``np.integer`` (no ``bool``/``np.bool_``); devuelve ``int`` nativo."""
+    if isinstance(value, bool | np.bool_) or not isinstance(value, int | np.integer):
         raise TypeError(f"{name} debe ser int, no {type(value).__name__}")
-    return value
+    return int(value)
 
 
 def _check_seed(s: object, m: int) -> int:
