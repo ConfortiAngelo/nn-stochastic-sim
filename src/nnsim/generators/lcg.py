@@ -18,7 +18,7 @@ def _prime_factors(n: int) -> list[int]:
             primes.append(p)
             while n % p == 0:
                 n //= p
-        p += 1
+        p += 1 if p == 2 else 2  # tras el 2 alcanza con los impares
     if n > 1:
         primes.append(n)
     return primes
