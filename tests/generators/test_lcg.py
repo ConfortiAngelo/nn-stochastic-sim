@@ -209,3 +209,44 @@ def test_s1_01_lcg_rejects_modulus_above_2_32(check: bool) -> None:
             LCG(m=m, a=5, c=1, seed=0, check_full_period=check)
     ok = LCG(m=2**32, a=5, c=1, seed=0, check_full_period=check)
     assert ok.m == 2**32
+
+
+def test_s1_01_lcg_accepts_numpy_integers() -> None:
+    """Dados m, a, c, seed y n como np.int64, cuando construyo y genero, entonces la
+    secuencia es idéntica a la de int nativo y next_int() devuelve int nativo; bool y
+    np.bool_ se siguen rechazando.
+
+    Referencia: Cap. 2, Hull-Dobell (diseño por contrato, CLAUDE.md sección 4.6).
+    """
+    native = LCG(m=2**16, a=25173, c=13849, seed=1)
+    numpy_ = LCG(m=np.int64(2**16), a=np.int64(25173), c=np.int64(13849), seed=np.int64(1))
+    assert np.array_equal(native.uniform(50), numpy_.uniform(np.int64(50)))  # type: ignore[arg-type]
+    assert type(numpy_.next_int()) is int
+    assert type(numpy_.m) is int
+    with pytest.raises(TypeError, match="seed"):
+        LCG(seed=np.bool_(True))  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="seed"):
+        LCG(seed=np.float64(1.0))  # type: ignore[arg-type]
+
+
+def test_s1_01_lcg_exposes_parameters() -> None:
+    """Dado un LCG con (m, a, c) dados, cuando consulto las propiedades, entonces devuelven
+    los mismos valores.
+
+    Referencia: Cap. 2, Hull-Dobell.
+    """
+    lcg = LCG(m=2**16, a=25173, c=13849, seed=1)
+    assert (lcg.m, lcg.a, lcg.c) == (2**16, 25173, 13849)
+
+
+def test_s1_01_lcg_rejects_non_hull_dobell_non_power_of_two() -> None:
+    """Dados m=45=3²·5, a=4 y c=2 (a-1=3: el primo 5 no lo divide), cuando construyo con
+    check_full_period=True, entonces ValueError "Hull-Dobell" con el primo violado.
+
+    Referencia: Cap. 2, Hull-Dobell (condición 2, m no potencia de 2).
+    """
+    ok, reason = satisfies_hull_dobell(45, 4, 2)
+    assert not ok
+    assert "primo" in reason
+    with pytest.raises(ValueError, match="Hull-Dobell"):
+        LCG(m=45, a=4, c=2, seed=0)
