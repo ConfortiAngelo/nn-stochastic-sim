@@ -5,6 +5,9 @@ from math import gcd
 import numpy as np
 from numpy.typing import NDArray
 
+#: Tope de m: garantiza (X+0.5)/m < 1 en float64 y factorización barata (sqrt(m) <= 2^16).
+MAX_MODULUS = 2**32
+
 
 def _prime_factors(n: int) -> list[int]:
     """Primos distintos de ``n`` por división de prueba (alcanza para m <= 2^32)."""
@@ -15,7 +18,7 @@ def _prime_factors(n: int) -> list[int]:
             primes.append(p)
             while n % p == 0:
                 n //= p
-        p += 1
+        p += 1 if p == 2 else 2  # tras el 2 alcanza con los impares
     if n > 1:
         primes.append(n)
     return primes
@@ -54,10 +57,10 @@ def satisfies_hull_dobell(m: int, a: int, c: int) -> tuple[bool, str]:
 
 
 def _require_int(value: object, name: str) -> int:
-    """Exige un ``int`` genuino (``bool`` no vale); lanza TypeError si no."""
-    if isinstance(value, bool) or not isinstance(value, int):
+    """Exige ``int`` o ``np.integer`` (no ``bool``/``np.bool_``); devuelve ``int`` nativo."""
+    if isinstance(value, bool | np.bool_) or not isinstance(value, int | np.integer):
         raise TypeError(f"{name} debe ser int, no {type(value).__name__}")
-    return value
+    return int(value)
 
 
 def _check_seed(s: object, m: int) -> int:
@@ -72,6 +75,10 @@ class LCG:
     """Generador congruencial lineal.
 
     X_{i+1} = (a·X_i + c) mod m.
+
+    Precondición: 2 <= m <= 2^32. El tope asegura que r = (X + 0.5)/m quede en el
+    intervalo abierto (0, 1) en float64 (con m >= 2^53 podría redondear a 1.0) y que
+    la verificación de Hull-Dobell por división de prueba termine rápido.
 
     Referencia: Cap. 2, Hull-Dobell.
     """
@@ -89,6 +96,11 @@ class LCG:
         c = _require_int(c, "c")
         if m < 2:
             raise ValueError(f"m debe ser >= 2, recibió {m}")
+        if m > MAX_MODULUS:
+            raise ValueError(
+                f"m debe ser <= 2^32 (recibió {m}): con m mayor (X+0.5)/m puede redondear a 1.0 "
+                "en float64 y la factorización por división de prueba se vuelve inviable"
+            )
         if not 0 <= a < m:
             raise ValueError(f"a debe estar en [0, {m}), recibió {a}")
         if not 0 <= c < m:
