@@ -2,6 +2,8 @@
 
 import numpy as np
 import pytest
+from hypothesis import example, given
+from hypothesis import strategies as st
 
 from nnsim.generators.base import RNG
 from nnsim.generators.lcg import LCG, satisfies_hull_dobell
@@ -122,3 +124,73 @@ def test_s1_01_lcg_full_period_non_power_of_two() -> None:
     seen = {lcg.next_int() for _ in range(45)}
     assert len(seen) == 45
     assert lcg.next_int() in seen
+
+
+def test_s1_01_lcg_validates_arguments() -> None:
+    """Dados argumentos inválidos (seed negativa, seed ≥ m, seed bool/float, n<0, m<2,
+    a o c fuera de [0, m)), cuando construyo o llamo, entonces ValueError/TypeError claro;
+    uniform(0) devuelve shape (0,) y dtype float64.
+
+    Referencia: Cap. 2, Hull-Dobell (diseño por contrato, CLAUDE.md sección 4.6).
+    """
+    with pytest.raises(ValueError, match="seed"):
+        LCG(seed=-1)
+    with pytest.raises(ValueError, match="seed"):
+        LCG(seed=2**32)
+    with pytest.raises(TypeError, match="seed"):
+        LCG(seed=True)
+    with pytest.raises(TypeError, match="seed"):
+        LCG(seed=1.5)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="m"):
+        LCG(m=1, a=0, c=0, seed=0, check_full_period=False)
+    with pytest.raises(ValueError, match="a"):
+        LCG(m=16, a=16, c=1, seed=0, check_full_period=False)
+    with pytest.raises(ValueError, match="c"):
+        LCG(m=16, a=5, c=-1, seed=0, check_full_period=False)
+
+    lcg = LCG()
+    with pytest.raises(ValueError, match="seed"):
+        lcg.seed(-5)
+    with pytest.raises(TypeError, match="seed"):
+        lcg.seed(False)
+    with pytest.raises(ValueError, match="n"):
+        lcg.uniform(-1)
+    with pytest.raises(TypeError, match="n"):
+        lcg.uniform(2.0)  # type: ignore[arg-type]
+
+    empty = lcg.uniform(0)
+    assert empty.shape == (0,)
+    assert empty.dtype == np.float64
+
+
+@pytest.mark.parametrize(("a", "c", "cond"), NON_HULL_DOBELL)
+def test_s1_01_lcg_check_disabled_accepts_any_params(a: int, c: int, cond: str) -> None:
+    """Dados los parámetros de C4, cuando construyo con check_full_period=False, entonces
+    se aceptan y el generador funciona.
+
+    Referencia: Cap. 2, Hull-Dobell.
+    """
+    lcg = LCG(m=2**16, a=a, c=c, seed=1, check_full_period=False)
+    assert lcg.uniform(5).shape == (5,)
+
+
+@given(seed=st.integers(min_value=0, max_value=2**32 - 1), n=st.integers(1, 200))
+@example(seed=0, n=1)
+def test_s1_01_lcg_uniform_in_open_interval(seed: int, n: int) -> None:
+    """Propiedad: para toda semilla en [0, 2^32) y n en [1, 200], toda uniforme cae en (0, 1).
+
+    Referencia: Cap. 2, Hull-Dobell (CLAUDE.md sección 4.5).
+    """
+    x = LCG(seed=seed).uniform(n)
+    assert x.shape == (n,)
+    assert np.all((x > 0.0) & (x < 1.0))
+
+
+def test_s1_01_lcg_extremes_stay_open() -> None:
+    """Dado X_i = m-1 (a=1, c=1, semilla m-2), cuando genero una uniforme, entonces
+    0 < r < 1 estricto, porque r = (X+0.5)/m.
+
+    Referencia: Cap. 2, Hull-Dobell (intervalo abierto, requerido por Box-Muller).
+    """
+    r = LCG(m=2**32, a=1, c=1, seed=2**32 - 2).uniform(1)[0]
+    assert 0.0 < r < 1.0
