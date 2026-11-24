@@ -53,6 +53,21 @@ def satisfies_hull_dobell(m: int, a: int, c: int) -> tuple[bool, str]:
     return True, ""
 
 
+def _require_int(value: object, name: str) -> int:
+    """Exige un ``int`` genuino (``bool`` no vale); lanza TypeError si no."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError(f"{name} debe ser int, no {type(value).__name__}")
+    return value
+
+
+def _check_seed(s: object, m: int) -> int:
+    """Valida la precondición 0 <= s < m."""
+    s = _require_int(s, "seed")
+    if not 0 <= s < m:
+        raise ValueError(f"seed debe estar en [0, {m}), recibió {s}")
+    return s
+
+
 class LCG:
     """Generador congruencial lineal.
 
@@ -69,6 +84,15 @@ class LCG:
         seed: int = 2025,
         check_full_period: bool = True,
     ) -> None:
+        m = _require_int(m, "m")
+        a = _require_int(a, "a")
+        c = _require_int(c, "c")
+        if m < 2:
+            raise ValueError(f"m debe ser >= 2, recibió {m}")
+        if not 0 <= a < m:
+            raise ValueError(f"a debe estar en [0, {m}), recibió {a}")
+        if not 0 <= c < m:
+            raise ValueError(f"c debe estar en [0, {m}), recibió {c}")
         if check_full_period:
             ok, reason = satisfies_hull_dobell(m, a, c)
             if not ok:
@@ -76,7 +100,7 @@ class LCG:
         self._m = m
         self._a = a
         self._c = c
-        self._x = seed
+        self._x = _check_seed(seed, m)
 
     @property
     def m(self) -> int:
@@ -95,7 +119,7 @@ class LCG:
 
     def seed(self, s: int) -> None:
         """Fija el estado inicial X_0 = s."""
-        self._x = s
+        self._x = _check_seed(s, self._m)
 
     def next_int(self) -> int:
         """Avanza la recurrencia y devuelve X_{i+1}."""
@@ -108,6 +132,9 @@ class LCG:
         r_i = (X_i + 0.5) / m. El desplazamiento de 0.5 evita 0 exacto (rompería Box-Muller)
         y deja el máximo en 1 - 1/(2m) < 1.
         """
+        n = _require_int(n, "n")
+        if n < 0:
+            raise ValueError(f"n debe ser >= 0, recibió {n}")
         out = np.empty(n, dtype=np.float64)
         for i in range(n):  # recurrencia secuencial por definición (CLAUDE.md sección 7)
             out[i] = (self.next_int() + 0.5) / self._m
