@@ -194,3 +194,18 @@ def test_s1_01_lcg_extremes_stay_open() -> None:
     """
     r = LCG(m=2**32, a=1, c=1, seed=2**32 - 2).uniform(1)[0]
     assert 0.0 < r < 1.0
+
+
+@pytest.mark.parametrize("check", [True, False])
+def test_s1_01_lcg_rejects_modulus_above_2_32(check: bool) -> None:
+    """Dado un m > 2^32, cuando construyo el LCG (con o sin check_full_period), entonces
+    ValueError que menciona el máximo 2^32; m = 2^32 se acepta. Así el puerto garantiza
+    r en (0, 1) en float64 (y la factorización por división de prueba termina).
+
+    Referencia: Cap. 2, Hull-Dobell (intervalo abierto, requerido por Box-Muller).
+    """
+    for m in (2**32 + 1, 2**64):
+        with pytest.raises(ValueError, match="2\\^32"):
+            LCG(m=m, a=5, c=1, seed=0, check_full_period=check)
+    ok = LCG(m=2**32, a=5, c=1, seed=0, check_full_period=check)
+    assert ok.m == 2**32
