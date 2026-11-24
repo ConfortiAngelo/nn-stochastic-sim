@@ -1,7 +1,56 @@
 """Congruencial lineal X_{i+1} = (a·X_i + c) mod m. Referencia: Cap. 2, Hull-Dobell."""
 
+from math import gcd
+
 import numpy as np
 from numpy.typing import NDArray
+
+
+def _prime_factors(n: int) -> list[int]:
+    """Primos distintos de ``n`` por división de prueba (alcanza para m <= 2^32)."""
+    primes: list[int] = []
+    p = 2
+    while p * p <= n:
+        if n % p == 0:
+            primes.append(p)
+            while n % p == 0:
+                n //= p
+        p += 1
+    if n > 1:
+        primes.append(n)
+    return primes
+
+
+def satisfies_hull_dobell(m: int, a: int, c: int) -> tuple[bool, str]:
+    """Verifica las condiciones de Hull-Dobell para período completo m.
+
+    El LCG X_{i+1} = (a·X_i + c) mod m tiene período m si y solo si:
+
+    1. gcd(c, m) = 1.
+    2. p | (a - 1) para todo primo p que divide a m.
+    3. 4 | (a - 1) si 4 | m.
+
+    Parameters
+    ----------
+    m, a, c : int
+        Módulo, multiplicador e incremento.
+
+    Returns
+    -------
+    tuple[bool, str]
+        ``(True, "")`` si cumple; si no, ``(False, motivo)`` con la condición violada.
+
+    Referencia: Cap. 2, Hull-Dobell.
+    """
+    g = gcd(c, m)
+    if g != 1:
+        return False, f"c={c} y m={m} no son coprimos (gcd={g})"
+    for p in _prime_factors(m):
+        if (a - 1) % p != 0:
+            return False, f"el primo p={p} divide a m={m} pero no a a-1={a - 1}"
+    if m % 4 == 0 and (a - 1) % 4 != 0:
+        return False, f"4 divide a m={m} pero no a a-1={a - 1}"
+    return True, ""
 
 
 class LCG:
@@ -18,7 +67,12 @@ class LCG:
         a: int = 1664525,
         c: int = 1013904223,
         seed: int = 2025,
+        check_full_period: bool = True,
     ) -> None:
+        if check_full_period:
+            ok, reason = satisfies_hull_dobell(m, a, c)
+            if not ok:
+                raise ValueError(f"Los parámetros no cumplen Hull-Dobell: {reason}")
         self._m = m
         self._a = a
         self._c = c
