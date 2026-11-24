@@ -1,9 +1,10 @@
 """Tests del congruencial lineal X_{i+1} = (a·X_i + c) mod m. Referencia: Cap. 2, Hull-Dobell."""
 
 import numpy as np
+import pytest
 
 from nnsim.generators.base import RNG
-from nnsim.generators.lcg import LCG
+from nnsim.generators.lcg import LCG, satisfies_hull_dobell
 
 
 def test_s1_01_lcg_satisfies_rng_protocol() -> None:
@@ -76,3 +77,48 @@ def test_s1_01_lcg_uniform_moments() -> None:
     tol_var = 4.0 * np.sqrt(1.0 / (180.0 * n))
     assert abs(x.mean() - 0.5) < tol_mean
     assert abs(x.var() - 1.0 / 12.0) < tol_var
+
+
+#: Parámetros que violan Hull-Dobell con m = 2^16 (a=25173, c=13849 sí lo cumplen).
+NON_HULL_DOBELL = [
+    pytest.param(25173, 13848, "coprim", id="c_par"),
+    pytest.param(25172, 13849, "primo", id="a_par"),
+    pytest.param(25175, 13849, "4", id="a_3_mod_4"),
+]
+
+
+@pytest.mark.parametrize(("a", "c", "cond"), NON_HULL_DOBELL)
+def test_s1_01_lcg_rejects_non_hull_dobell(a: int, c: int, cond: str) -> None:
+    """Dados parámetros que no cumplen Hull-Dobell (m=2^16 con c par; a par; a ≡ 3 mod 4),
+    cuando construyo con check_full_period=True, entonces ValueError que nombra
+    "Hull-Dobell" y la condición violada.
+
+    Referencia: Cap. 2, Hull-Dobell.
+    """
+    ok, reason = satisfies_hull_dobell(2**16, a, c)
+    assert not ok
+    assert cond in reason
+    with pytest.raises(ValueError, match="Hull-Dobell") as exc:
+        LCG(m=2**16, a=a, c=c, seed=1)
+    assert cond in str(exc.value)
+
+
+def test_s1_01_lcg_satisfies_hull_dobell_accepts_valid() -> None:
+    """Dados parámetros válidos, cuando consulto satisfies_hull_dobell, entonces (True, "").
+
+    Referencia: Cap. 2, Hull-Dobell.
+    """
+    assert satisfies_hull_dobell(2**16, 25173, 13849) == (True, "")
+    assert satisfies_hull_dobell(2**32, 1664525, 1013904223) == (True, "")
+
+
+def test_s1_01_lcg_full_period_non_power_of_two() -> None:
+    """Dado m=45=3²·5, a=16 (a-1=15=3·5) y c=2, cuando recorro el ciclo, entonces el
+    período es 45 (Hull-Dobell con m que no es potencia de 2).
+
+    Referencia: Cap. 2, Hull-Dobell.
+    """
+    lcg = LCG(m=45, a=16, c=2, seed=0)
+    seen = {lcg.next_int() for _ in range(45)}
+    assert len(seen) == 45
+    assert lcg.next_int() in seen
