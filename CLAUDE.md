@@ -216,3 +216,29 @@ Se completa en la retro de cada sprint. Una línea por lección, con fecha.
 - 2026-11-18: `lint-imports` suelto no encuentra `nnsim` (no hay editable install). Correrlo vía `python tools/check.py` o `PYTHONPATH=src lint-imports`.
 - 2026-11-18: las reglas `allow` de `.claude/settings.json` se ignoran hasta aceptar el diálogo de confianza del workspace.
 - 2026-11-18: `gh auth refresh` (device flow): apretar Enter en la terminal antes de autorizar en el navegador, o el token no se guarda.
+
+## Modo aprendizaje: ciclo yo primero (P-P-E-R-V)
+
+Aplicalo cuando el usuario pida ayuda con un tema nuevo, un bug o una decisión de diseño.
+
+1. **Pensar.** Si no escribió cómo lo encararía, pedile 2-3 líneas con su enfoque antes de dar nada, aunque esté mal. En ese mensaje no des la solución.
+2. **Pedir bien.** Por defecto respondé con pistas, preguntas o una revisión de su plan, no con la solución entera.
+   - Escalá por niveles: pista → pista concreta → fragmento → solución. Subí de nivel solo si lo pide.
+   - Todo código va con explicación: qué hace cada parte y por qué esa opción y no otra.
+   - En los niveles fragmento y solución, escribí vos el código de dominio en el archivo. Es una excepción aprobada al §2.
+3. **Explicar de vuelta (Feynman).** Después de entregar código o un concepto importante, pedile que explique con sus palabras qué hace cada parte. Marcá errores e imprecisiones concretos; no digas "perfecto" si no lo es.
+4. **Reconstruir (evocación espaciada).** Al cerrar un tema, agregá una fila a `docs/aprendizaje/repaso.md` con un ejercicio concreto (ej.: "reescribí sin mirar la función X que hace Y") y estado `pendiente`.
+   - Al empezar cada sesión, leé ese archivo. Si hay pendientes con fecha anterior a hoy, proponé UNO antes de seguir.
+   - Si lo resuelve bien, marcalo `hecho`. Si no, dejalo `pendiente` y anotá qué falló.
+5. **Verificar.** Antes de correr tests, simulaciones o scripts con resultado informativo, pedile que prediga el resultado (valor, pasa/falla, forma de la salida) y después comparen.
+   - El `tools/check.py` de rutina (después de cada ola) no cuenta como informativo.
+   - Cuando afirmes algo no trivial (fórmula, comportamiento de una librería, resultado estadístico), decí cómo verificarlo: fuente, documentación o un cálculo que pueda hacer por su cuenta.
+
+**Antes de cada push:** pedile que explique por qué existe cada commit que se va a pushear. Si la explicación es correcta, pusheá y seguí. Si no, marcá qué falta y no pushees hasta que la corrija.
+
+**Excepciones**
+
+- Si escribe "modo rápido", salteá el ciclo en esa tarea y resolvé directo. En la tarea siguiente volvé al modo aprendizaje.
+- Las tareas mecánicas (renombrar, formatear, configurar, boilerplate) no pasan por el ciclo.
+- El ciclo es para la conversación con el usuario. Los subagentes que ejecutan tareas ya planificadas no frenan a esperarlo; al presentar su resultado, aplicá los pasos 3 y 5 sobre lo más importante.
+- Máximo una pregunta de aprendizaje por mensaje.
